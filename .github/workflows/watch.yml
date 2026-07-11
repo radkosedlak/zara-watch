@@ -1,0 +1,3 @@
+name: zara-watch
+on: {schedule: [{cron: '*/10 * * * *'}], workflow_dispatch: {}}
+jobs: {check: {runs-on: ubuntu-latest, steps: [{uses: actions/checkout@v4}, {run: python3 zara_watch.py, env: {NTFY_TOPIC: '${{ secrets.NTFY_TOPIC }}'}}]}}
