@@ -1,3 +1,33 @@
 name: zara-watch
-on: {schedule: [{cron: '*/10 * * * *'}], workflow_dispatch: {}}
-jobs: {check: {runs-on: ubuntu-latest, steps: [{uses: actions/checkout@v4}, {run: python3 zara_watch.py, env: {NTFY_TOPIC: '${{ secrets.NTFY_TOPIC }}'}}]}}
+
+on:
+  schedule:
+    - cron: "9,29,49 * * * *"   # 3x za hodinu, mimo pretazenych okruhlych minut
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: zara-watch
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check Zara
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: python3 zara_watch.py
+
+      - name: Commit state
+        run: |
+          git config user.name "zara-bot"
+          git config user.email "zara-bot@users.noreply.github.com"
+          git add state.json
+          git diff --cached --quiet || git commit -m "Update state"
+          git push
